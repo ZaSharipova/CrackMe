@@ -113,6 +113,11 @@ int PatchCom(const char *path) {
     }
 
     fseek(file_out, 0x73, SEEK_SET);
+    char buffer = 0;
+    fgets(&buffer, 1, file_out);
+    if (buffer == 0x74) {
+        printf("Is already patched!\n");
+    }
 
     unsigned char value = 0x74;
     fwrite(&value, 1, 1, file_out);
@@ -381,7 +386,7 @@ void AppRender(App *app) {
     ButtonDraw(&app->btn_keygen, app->renderer);
 
     if (app->success_image) {
-        SDL_Rect dst = {50, 50, 200, 200};
+        SDL_Rect dst = {0, 0, 300, 400};
         SDL_RenderCopy(app->renderer, app->success_image, NULL, &dst);
     }
 
