@@ -84,7 +84,13 @@
 И такое уязвимое место в программе было найдено.
 <div style="display: flex; gap: 10px;">
     <img src="images/code_patch.png" alt="1" style="max-width: 70%; height: auto; width: ;">
-    <img src="images/byte_code_patch.png"alt="1" style="max-width: 25%; height: auto;">
+    <img src="images/byte_code_patch.png" alt="1" style="max-width: 25%; height: auto;">
 </div>
 
 $75$ (то есть ```jne```) c помощью программы на `C` я заменила на $74$ (то есть ```je```). Поэтому любой неправильный пароль принимается, ведь на печать ```Permission denied``` происходит переход только в случае верного пароля.
+
+Также добавлена графическая анимация этого процесса: можно выбрать к окне файл для патчинга, заменить в нем байт или даже срендерить любой пароль.
+
+![](crack/window_example.png)
+
+В случае успешного патчинга сменится картинка и заиграет музыка.
