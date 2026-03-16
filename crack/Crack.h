@@ -29,6 +29,7 @@ typedef struct {
 
     SDL_Texture *success_image;
     Mix_Music *music;
+    char com_file[200];
 
     int patched;
     int running;
@@ -38,6 +39,7 @@ typedef struct {
     int keygen_w, keygen_h;
 
     int showBg;
+    int good_file;
 } App;
 
 void GenerateKey(char *buf, int buf_size);
@@ -45,7 +47,7 @@ void ButtonCreateTexture(Button *btn, SDL_Renderer *renderer, TTF_Font *font);
 int  ButtonHit(Button *btn, int x, int y);
 void ButtonDraw(Button *btn, SDL_Renderer *renderer);
 void ButtonDestroy(Button *btn);
-int  PatchCom(const char *path);
+int  PatchCom(const char *path, App *app);
 int  AppInitSDL(App *app);
 void AppCreateButtons(App *app);
 void AppLoadAssets(App *app);

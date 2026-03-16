@@ -11,9 +11,10 @@
 
 #include "Crack.h"
 
-int main(int argc, char *argv[]) {
-    
+int main(void) {
     App app = {0};
+    strcpy(app.com_file,  "CRACKME.COM");
+    app.good_file = 1;
     app.running = 1;
     app.showBg = 1;
 
@@ -28,7 +29,7 @@ int main(int argc, char *argv[]) {
         int mx = 0, my = 0;
         SDL_GetMouseState(&mx, &my);
         app.btn_choose.hovered = ButtonHit(&app.btn_choose, mx, my);
-        app.btn_crack.hovered = ButtonHit(&app.btn_crack,  mx, my);
+        app.btn_crack.hovered  = ButtonHit(&app.btn_crack,  mx, my);
         app.btn_keygen.hovered = ButtonHit(&app.btn_keygen, mx, my);
 
         AppHandleEvents(&app);

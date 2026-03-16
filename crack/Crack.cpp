@@ -12,17 +12,18 @@
 #include <time.h>
 
 #define CRACKME_EXPECTED_SIZE 10582 
+#define CRACKME_EXPECTED_HASH 447
 #define WINDOW_TITLE "CrackMe Patcher"
 #define WINDOW_W 600
 #define WINDOW_H 400
 
-#define COM_FILE "CRACKME.COM"
+//#define COM_FILE "CRACKME.COM"
 #define IMAGE_FILE "success.png"
 #define SOUND_FILE "success.mp3"
 #define FONT_FILE "font.ttf"
 #define FONT_SIZE 14
 
-void GenerateKey(char *buf, int buf_size) {
+void GenerateKey(char *buf, size_t buf_size) {
     assert(buf);
 
     const char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -93,8 +94,9 @@ void ButtonDestroy(Button *btn) {
 }
 
 // патч COM файла по фиксированному смещению
-int PatchCom(const char *path) {
+int PatchCom(const char *path, App *app) {
     assert(path);
+    assert(app);
 
     const char *file = path;
     FILE *file_out = fopen(file, "r+b");
@@ -109,20 +111,44 @@ int PatchCom(const char *path) {
     if (size != CRACKME_EXPECTED_SIZE) {
         printf("Wrong file size: %ld (expected %d).\n", size, CRACKME_EXPECTED_SIZE);
         fclose(file_out);
-        return 0;
+        app->good_file = 0;
+        return 0; // как бы здесь нормально выходить без exit
     }
 
-    fseek(file_out, 0x73, SEEK_SET);
-    char buffer = 0;
-    fgets(&buffer, 1, file_out);
-    if (buffer == 0x74) {
-        printf("Is already patched!\n");
+    rewind(file_out);
+
+    unsigned char *buffer_all = (unsigned char *) calloc (0x10000, sizeof(unsigned char));
+    fread(buffer_all, 1, 0x10000, file_out);
+    long long hash = 0x0;
+
+    for (int i = 0; i < size; i++) {
+        hash = ((hash << 5) + hash + buffer_all[i]) % 5381;
     }
+
+    rewind(file_out);
+    fseek(file_out, 0x73, SEEK_SET);
+
+    if (hash != CRACKME_EXPECTED_HASH) {
+        char buffer = 0;
+        fgets(&buffer, 1, file_out);
+        if (buffer == 0x74) {
+            printf("Is already patched!\n");
+            fclose(file_out);
+            return 1;
+
+        }  else {
+            printf("Not expected hash.\n");
+            fclose(file_out);
+            free(buffer_all);
+            return 0;
+        }
+    } 
 
     unsigned char value = 0x74;
     fwrite(&value, 1, 1, file_out);
 
     fclose(file_out);
+    free(buffer_all);
     printf("Patch is successfully used.\n");
 
     return 1;
@@ -246,7 +272,7 @@ int OpenFileDialog(char *buf, int buf_size) {
     }
     pclose(file_out);
 
-    int len = strlen(buf);
+    size_t len = strlen(buf);
     if (len > 0 && buf[len - 1] == '\n') {
         buf[len - 1] = '\0';
     }
@@ -257,7 +283,7 @@ int OpenFileDialog(char *buf, int buf_size) {
 void AppOnCrack(App *app) {
     assert(app);
 
-    app->patched = PatchCom(COM_FILE);
+    app->patched = PatchCom(app->com_file, app);
     if (!app->patched) {
         return;
     }
@@ -282,8 +308,9 @@ void AppOnChoose(App *app) {
     if (!OpenFileDialog(path, sizeof(path))) return;
 
     printf("Chosen file: %s\n", path);
-    app->patched = PatchCom(path);
-    if (!app->patched) {
+    strcpy(app->com_file,  path);
+    app->patched = PatchCom(path, app);
+    if (!app->patched || !app->good_file) {
         return;
     }
 
@@ -316,7 +343,7 @@ void AppOnKeygen(App *app) {
         app->keygen_tex = NULL;
     }
 
-    SDL_Color white = {255, 255, 255, 255};
+    // SDL_Color white = {255, 255, 255, 255};
     // SDL_Surface *surf = TTF_RenderUTF8_Blended(app->font, app->keygen_result, white);
     // if (surf) {
     //     app->keygen_tex = SDL_CreateTextureFromSurface(app->renderer, surf);
